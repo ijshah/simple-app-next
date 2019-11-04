@@ -1,22 +1,38 @@
 import React, { Component } from "react";
 import axios from "axios";
+import on from 'await-handler'
 
 export default class PageContain extends Component {
   constructor(props, context) {
     super(props, context);
     // METHOD BINDING
     this.jsonCall = this.jsonCall.bind(this);
-    this.state = { data: [] };
+    this.state = { data: [],isIE:false };
   }
 
+
+  API = async () => {
+   return await axios.get(
+      `https://jsonplaceholder.typicode.com/todos/1`
+    ).then(response => {return response}).catch(error => {return error})
+  }
   // ASYNC FUNCATION FOR ON EVENT CALLING
   jsonCall = async () => {
-    const response = await axios.get(
-      `https://jsonplaceholder.typicode.com/todos/1`
-    );
-    console.log(response);
-    let json = response.data;
-    this.setState({ user: json });
+    // WITH AXIOS
+    // const response = await axios.get(
+    //   `https://jsonplaceholder.typicode.com/todos/1`
+    // );
+    // console.log(response);
+    // let json = response.data;
+    // this.setState({ user: json });
+   let [err, result] = await on(this.API());
+    if(err) {
+        throw err;
+    }
+    
+    // ... handle the result
+    console.log('RESULT',result);
+    this.setState({ user: result.data });
   };
 
   // ASYNC EVENT
@@ -26,6 +42,11 @@ export default class PageContain extends Component {
     );
     let json = await response.data;
     this.setState({ data: json });
+    const isEdge = window.navigator.userAgent.indexOf('Edge') != -1
+    const isIE = window.navigator.userAgent.indexOf('Trident') != -1 && !isEdge
+    if(isIE){
+      this.setState({ isIE: true });
+    }
   }
 
   render() {
@@ -50,7 +71,7 @@ export default class PageContain extends Component {
 
         <a href="javascript:void(0)" onClick={this.jsonCall}>
           {" "}
-          CLICK TO ALL API
+          CLICK TO CALL API
         </a>
         <style jsx>{`
           .hero {
